@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ImmoSync — Jonas Touati</title>
+  <style>
+    /* ─── VARIABLES ─────────────────────────────────────────── */
+    :root {
+      --bg: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --accent: #2563eb;
+      --section-accent: #0d70a7;
+      --accent-hover: #1d4ed8;
+      --card-bg: #f8fafc;
+      --border: rgba(16, 24, 40, 0.07);
+      --shadow: 0 10px 22px rgba(16, 24, 40, 0.06);
+    }
+
+    [data-theme='dark'] {
+      --bg: #0f1724;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #60a5fa;
+      --section-accent: #60a5fa;
+      --accent-hover: #3b82f6;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.08);
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.7;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 5rem 2rem 3rem;
+    }
+
+    /* ─── NAV ───────────────────────────────────────────────── */
+    .topnav {
+      position: fixed; top: 0; left: 0; right: 0;
+      padding: 0.75rem 0;
+      backdrop-filter: blur(10px) saturate(180%);
+      background: rgba(15, 23, 36, 0.9);
+      z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.08);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .topnav.scrolled {
+      padding: 0.5rem 0; background: rgba(15, 23, 36, 0.98);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .nav-container {
+      max-width: 1200px; margin: 0 auto; padding: 0 2rem;
+      display: flex; align-items: center;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 0.4rem;
+      text-decoration: none; font-weight: 800; color: #f8fafc;
+      font-size: 1.05rem; flex-shrink: 0; transition: opacity 0.2s ease;
+    }
+    .nav-brand:hover { opacity: 0.8; }
+    .nav-brand-icon { font-family: ui-monospace, monospace; color: #60a5fa; }
+
+    .nav-links {
+      display: flex; gap: 0.25rem; align-items: center;
+      margin-left: auto; margin-right: auto;
+    }
+    .nav-link {
+      color: #94a3b8; text-decoration: none;
+      padding: 0.5rem 1rem; border-radius: 8px;
+      font-size: 0.95rem; font-weight: 500;
+      transition: all 0.2s ease; position: relative; white-space: nowrap;
+    }
+    .nav-link::after {
+      content: ''; position: absolute; bottom: 2px; left: 50%;
+      transform: translateX(-50%); width: 0; height: 2px;
+      background: #60a5fa; transition: width 0.3s ease;
+    }
+    .nav-link:hover, .nav-link.active { color: #f8fafc; background: rgba(255,255,255,0.06); }
+    .nav-link:hover::after, .nav-link.active::after { width: 70%; }
+
+    .nav-actions { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
+
+    .theme-toggle {
+      background: transparent; border: none; color: #94a3b8;
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1.05rem; transition: all 0.2s ease;
+    }
+    .theme-toggle:hover { background: rgba(255,255,255,0.08); color: #f8fafc; transform: rotate(20deg); }
+
+    .menu-toggle {
+      display: none; background: transparent; border: none; color: #f8fafc;
+      width: 40px; height: 40px; border-radius: 8px;
+      align-items: center; justify-content: center; cursor: pointer; z-index: 1001;
+    }
+    .menu-toggle .hamburger {
+      position: relative; width: 20px; height: 2px;
+      background: currentColor; transition: all 0.3s ease;
+    }
+    .menu-toggle .hamburger::before, .menu-toggle .hamburger::after {
+      content: ''; position: absolute; width: 100%; height: 100%;
+      background: currentColor; transition: all 0.3s ease;
+    }
+    .menu-toggle .hamburger::before { transform: translateY(-6px); }
+    .menu-toggle .hamburger::after  { transform: translateY(6px); }
+    .menu-toggle[aria-expanded='true'] .hamburger { background: transparent; }
+    .menu-toggle[aria-expanded='true'] .hamburger::before { transform: rotate(45deg); }
+    .menu-toggle[aria-expanded='true'] .hamburger::after  { transform: rotate(-45deg); }
+
+    .mobile-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 999;
+    }
+    .mobile-overlay[data-visible='true'] { display: block; }
+
+    @media (max-width: 768px) {
+      .menu-toggle { display: flex; }
+      .nav-links {
+        position: fixed; top: 0; right: -100%; bottom: 0;
+        width: 80%; max-width: 300px; background: #0f1724;
+        flex-direction: column; padding: 5rem 1.5rem 2rem;
+        box-shadow: -5px 0 30px rgba(0,0,0,0.3);
+        transition: transform 0.3s ease-in-out; z-index: 1000; margin: 0;
+      }
+      .nav-links[data-visible='true'] { transform: translateX(-100%); }
+      .nav-link { width: 100%; padding: 0.75rem 1rem; margin: 0.2rem 0; }
+      .nav-link::after { display: none; }
+    }
+
+    /* ─── SCROLL ANIMATION ──────────────────────────────────── */
+    .fade-up {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1), transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+    .fade-up.delay-1 { transition-delay: 0.1s; }
+
+    /* ─── LAYOUT ────────────────────────────────────────────── */
+    .section { max-width: 1200px; margin: 0 auto 2.5rem; padding: 0 1rem; }
+
+    .section-title {
+      text-align: center; font-size: clamp(2.2rem, 6vw, 4rem);
+      letter-spacing: 3px; margin: 2rem 0 1rem;
+      color: var(--section-accent); font-weight: 900;
+    }
+
+    .section-content {
+      text-align: center; max-width: 980px; margin: 0 auto 2rem;
+      font-size: 1.15rem; color: var(--muted); line-height: 1.7;
+      background: var(--card-bg); padding: 2rem; border-radius: 12px;
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+      transition: background 0.3s ease;
+    }
+    .section-content p { color: var(--muted); margin-bottom: 0.75rem; }
+    .section-content p:last-child { margin-bottom: 0; }
+    .section-content strong { color: var(--text); }
+
+    /* ─── VERSION CARDS (replaces multiple .section-content) ── */
+    .version-grid {
+      max-width: 980px;
+      margin: 0 auto 2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    .version-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      text-align: left;
+      transition: background 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+    }
+    .version-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+    .version-card h3 {
+      font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem;
+      color: var(--section-accent);
+    }
+    .version-card p { font-size: 1rem; color: var(--muted); line-height: 1.7; }
+    @media (max-width: 768px) { .version-grid { grid-template-columns: 1fr; } }
+
+    /* ─── DIFFICULTIES LIST ─────────────────────────────────── */
+    .content-card {
+      max-width: 980px; margin: 0 auto 2rem;
+      background: var(--card-bg); padding: 2rem 2.5rem;
+      border-radius: 12px; box-shadow: var(--shadow);
+      border: 1px solid var(--border); text-align: left;
+      font-size: 1.1rem; color: var(--muted); line-height: 1.8;
+      transition: background 0.3s ease;
+    }
+    .content-card h3 {
+      font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;
+      color: var(--section-accent);
+    }
+    .content-card h3:not(:first-child) { margin-top: 1.5rem; }
+    .content-card p { margin-bottom: 0; color: var(--muted); }
+    .content-card strong { color: var(--text); }
+
+    /* ─── GALLERY ───────────────────────────────────────────── */
+    .gallery-wrapper {
+      max-width: 900px; margin: 0 auto 2rem;
+      background: var(--card-bg); border-radius: 12px;
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+      padding: 2rem; transition: background 0.3s ease;
+    }
+
+    .gallery-image-area {
+      position: relative; width: 100%; height: 480px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.04); border-radius: 8px; overflow: hidden;
+    }
+    [data-theme='dark'] .gallery-image-area { background: rgba(0,0,0,0.2); }
+
+    .gallery-image {
+      max-width: 100%; max-height: 100%;
+      object-fit: contain; display: block;
+      transition: opacity 0.25s ease;
+    }
+    .gallery-image.fade { opacity: 0; }
+
+    .gallery-controls {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-top: 1.5rem; gap: 1rem;
+    }
+
+    .gallery-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600;
+      border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .gallery-btn:hover { background: var(--accent-hover); transform: translateY(-2px); }
+    .gallery-btn:active { transform: translateY(0); }
+    .gallery-btn:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+    [data-theme='dark'] .gallery-btn:disabled { background: rgba(255,255,255,0.1); color: #64748b; }
+
+    .gallery-counter { font-size: 1rem; color: var(--muted); font-weight: 500; }
+
+    .gallery-image { cursor: zoom-in; }
+
+    .lightbox-overlay {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.92); align-items: center; justify-content: center;
+    }
+    .lightbox-overlay.active { display: flex; }
+    .lightbox-content { max-width: 90vw; max-height: 85vh; display: flex; align-items: center; justify-content: center; }
+    .lightbox-content img { max-width: 90vw; max-height: 85vh; object-fit: contain; border-radius: 6px; }
+    .lightbox-close {
+      position: fixed; top: 1rem; right: 1.5rem; font-size: 2.5rem; color: #fff;
+      cursor: pointer; line-height: 1; z-index: 1001; opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+    .lightbox-close:hover { opacity: 1; }
+    .lightbox-nav {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.12); border: none; color: #fff;
+      font-size: 2.5rem; width: 3rem; height: 3rem; border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; z-index: 1001; line-height: 1;
+    }
+    .lightbox-nav:hover { background: rgba(255,255,255,0.25); }
+    .lightbox-nav.disabled { opacity: 0.2; cursor: default; pointer-events: none; }
+    .lightbox-prev { left: 1rem; }
+    .lightbox-next { right: 1rem; }
+    .lightbox-counter-lb {
+      position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%);
+      color: rgba(255,255,255,0.7); font-size: 0.9rem; z-index: 1001;
+    }
+
+    /* ─── TECH TERMINAL ─────────────────────────────────────── */
+    .tech-terminal {
+      max-width: 700px; margin: 0 auto 2rem;
+      background: #1e1e2e; border-radius: 10px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+      font-family: 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+    }
+    .terminal-header {
+      background: #2a2a3e; padding: 0.55rem 1rem;
+      display: flex; align-items: center; gap: 0.45rem;
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .dot-red    { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green  { background: #28c840; }
+    .terminal-filename {
+      margin-left: auto; margin-right: auto;
+      font-size: 0.72rem; color: rgba(255,255,255,0.35); font-family: inherit;
+    }
+    .tech-terminal-body {
+      padding: 1rem 1.5rem 1.25rem; font-size: 0.9rem; line-height: 2; color: #cdd6f4;
+    }
+    .tech-row { display: block; }
+    .tech-key   { color: #89b4fa; }
+    .tech-colon { color: #cdd6f4; }
+    .tech-value { color: #a6e3a1; }
+    .tech-comma { color: #cdd6f4; }
+    .code-bracket { color: #cdd6f4; }
+
+    /* ─── FOOTER ────────────────────────────────────────────── */
+    .site-footer { margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border); text-align: center; }
+    .site-footer p { margin: 0.6rem 0; font-size: 1.1rem; color: var(--text); }
+    .site-footer a { color: var(--section-accent); text-decoration: underline dotted; font-weight: 700; }
+    .site-footer a:hover { color: var(--accent); }
+
+    @media (max-width: 768px) {
+      .container { padding: 4rem 1.5rem 2rem; }
+      .gallery-image-area { height: 280px; }
+      .gallery-btn { padding: 0.6rem 1rem; font-size: 0.9rem; }
+      .gallery-wrapper { padding: 1.5rem; }
+      .tech-terminal { font-size: 0.82rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mobile-overlay" id="mobileOverlay" data-visible="false"></div>
+
+  <nav class="topnav" id="topnav">
+    <div class="nav-container">
+      <a href="/" class="nav-brand" aria-label="Accueil">
+        <span class="nav-brand-icon">&lt;/&gt;</span>
+        <span>JT</span>
+      </a>
+      <div class="nav-links" id="navLinks" data-visible="false">
+        <a href="/" class="nav-link" onclick="localStorage.removeItem('portfolio-theme')">Accueil</a>
+        <a href="/allperf.html"          class="nav-link">Stage Atol</a>
+        <a href="/elit-technologie.html" class="nav-link">Stage Netvincennes</a>
+        <a href="/immo-sync.html"        class="nav-link active">ImmoSync</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" aria-label="Changer le thème">🌙</button>
+        <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-label="Menu">
+          <span class="hamburger"></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <section class="section">
+
+      <h1 class="section-title fade-up">BUT DU PROJET</h1>
+      <div class="section-content fade-up delay-1">
+        <p>
+          Ce projet vise à développer une application dédiée à la <strong>gestion et au suivi de travaux</strong>.
+          Elle permet de centraliser les projets, de suivre l'avancement des chantiers et de faciliter
+          la coordination entre les différents utilisateurs — propriétaires, inspecteurs et entrepreneurs.
+        </p>
+        <p>
+          Chaque utilisateur dispose d'un espace adapté à son rôle. Le projet comprend également
+          un <strong>espace administrateur et un espace gestionnaire</strong>, offrant un contrôle global
+          sur l'application, la gestion des utilisateurs, des projets et des données associées.
+        </p>
+      </div>
+
+      <h1 class="section-title fade-up">GALERIE</h1>
+      <div class="gallery-wrapper fade-up delay-1">
+        <div class="gallery-image-area">
+          <img id="gallery-image" class="gallery-image" src="" alt="Capture ImmoSync" />
+        </div>
+        <div class="gallery-controls">
+          <button id="prev-btn" class="gallery-btn" disabled>← Précédent</button>
+          <span id="counter" class="gallery-counter">1 / —</span>
+          <button id="next-btn" class="gallery-btn">Suivant →</button>
+        </div>
+      </div>
+
+      <div class="lightbox-overlay" id="lightbox">
+        <span class="lightbox-close" id="lightbox-close">&times;</span>
+        <button class="lightbox-nav lightbox-prev" id="lightbox-prev">&#8249;</button>
+        <div class="lightbox-content">
+          <img id="lightbox-img" src="" alt="" />
+        </div>
+        <button class="lightbox-nav lightbox-next" id="lightbox-next">&#8250;</button>
+        <div class="lightbox-counter-lb" id="lightbox-counter"></div>
+      </div>
+
+      <h1 class="section-title fade-up">TECHNOLOGIES UTILISÉES</h1>
+      <div class="tech-terminal fade-up delay-1">
+        <div class="terminal-header">
+          <span class="terminal-dot dot-red"></span>
+          <span class="terminal-dot dot-yellow"></span>
+          <span class="terminal-dot dot-green"></span>
+          <span class="terminal-filename">immosync-stack.json</span>
+        </div>
+        <div class="tech-terminal-body">
+          <span class="code-bracket">{</span>
+          <div class="tech-row"><span class="tech-key">&nbsp;&nbsp;"langages"</span><span class="tech-colon">: [</span><span class="tech-value">"JAVA"</span><span class="tech-comma">, </span><span class="tech-value">"PHP"</span><span class="tech-comma">, </span><span class="tech-value">"DQL"</span><span class="tech-colon">],</span></div>
+          <div class="tech-row"><span class="tech-key">&nbsp;&nbsp;"frameworks"</span><span class="tech-colon">: [</span><span class="tech-value">"Symfony"</span><span class="tech-comma">, </span><span class="tech-value">"Bootstrap"</span><span class="tech-colon">],</span></div>
+          <div class="tech-row"><span class="tech-key">&nbsp;&nbsp;"database"</span><span class="tech-colon">: [</span><span class="tech-value">"MySQL"</span><span class="tech-colon">],</span></div>
+          <div class="tech-row"><span class="tech-key">&nbsp;&nbsp;"outils"</span><span class="tech-colon">: [</span><span class="tech-value">"Git"</span><span class="tech-comma">, </span><span class="tech-value">"Docker"</span><span class="tech-comma">, </span><span class="tech-value">"IntelliJ"</span><span class="tech-comma">, </span><span class="tech-value">"PhpStorm"</span><span class="tech-comma">, </span><span class="tech-value">"Composer"</span><span class="tech-comma">, </span><span class="tech-value">"Doctrine"</span><span class="tech-colon">]</span></div>
+          <span class="code-bracket">}</span>
+        </div>
+      </div>
+
+      <h1 class="section-title fade-up">DIFFÉRENTES VERSIONS</h1>
+      <div class="version-grid fade-up delay-1">
+        <div class="version-card">
+          <h3>V1 — Java</h3>
+          <p>Gestion globale pour le gestionnaire : entrepreneurs, catégories, propriétaires, biens,
+          prestations. Base fonctionnelle de l'application.</p>
+        </div>
+        <div class="version-card">
+          <h3>V2 — Java / Web Mobile</h3>
+          <p>Création et gestion des chantiers après inspection. Côté inspecteur : interface web mobile
+          pour consulter les chantiers, localiser les biens sur carte et saisir des observations.</p>
+        </div>
+        <div class="version-card">
+          <h3>V3 — Java</h3>
+          <p>Sollicitation automatisée des entrepreneurs après validation du chantier, avec
+          algorithmes de calcul de distances géographiques pour cibler les professionnels proches.</p>
+        </div>
+        <div class="version-card">
+          <h3>V4 — Web Symfony</h3>
+          <p>Espace entrepreneur dédié en Symfony : consultation des demandes de chantiers,
+          accès aux devis types, soumission de propositions via formulaires sécurisés.</p>
+        </div>
+        <div class="version-card" style="grid-column: 1 / -1;">
+          <h3>V5 — Java</h3>
+          <p>Outil de comparaison des devis avec interface graphique enrichie, jeu de couleurs
+          pour la lisibilité, et algorithmes multi-critères pondérés (date + coût).</p>
+        </div>
+      </div>
+
+      <h1 class="section-title fade-up">DIFFICULTÉS RENCONTRÉES</h1>
+      <div class="content-card fade-up delay-1">
+        <h3>Gestion du projet avec GitHub</h3>
+        <p>La prise en main de GitHub a nécessité une adaptation, notamment pour organiser le dépôt,
+        gérer les branches et assurer un suivi clair des versions du projet.</p>
+
+        <h3>Gestion des rôles et des droits utilisateurs</h3>
+        <p>La mise en place de profils distincts (gestionnaire, inspecteur, entrepreneur, propriétaire)
+        a impliqué une réflexion approfondie sur les autorisations et les accès selon chaque rôle.</p>
+
+        <h3>Conception et structuration de la base de données</h3>
+        <p>La modélisation des données a représenté un enjeu important pour garantir la cohérence
+        entre les entités et assurer de bonnes performances lors des requêtes.</p>
+
+        <h3>Organisation et évolution progressive des fonctionnalités</h3>
+        <p>Le projet a été développé par versions successives, ce qui demandait une bonne anticipation
+        afin d'éviter les régressions lors de l'ajout de nouvelles fonctionnalités.</p>
+      </div>
+
+      <h1 class="section-title fade-up">CONCLUSION</h1>
+      <div class="section-content fade-up delay-1">
+        <p>
+          Ce projet de gestion de chantiers m'a permis de développer une application complète en Java et web,
+          intégrant plusieurs profils utilisateurs et des fonctionnalités évolutives. Le travail par versions
+          successives m'a aidé à mieux comprendre l'architecture d'une application, la structuration des données
+          et la gestion d'un projet informatique.
+        </p>
+        <p>
+          Les difficultés rencontrées — GitHub, coordination des technologies, conception de la base de données —
+          ont renforcé ma rigueur et mon autonomie. Ce projet m'a permis de consolider mes compétences techniques
+          et de mieux me préparer aux exigences du monde professionnel.
+        </p>
+      </div>
+
+    </section>
+  </div>
+
+  <footer class="site-footer">
+    <p>Me contacter : <a href="https://mail.google.com/mail/?view=cm&fs=1&to=jonas.touati1@ortmontreuil.fr" target="_blank" rel="noopener noreferrer">jonas.touati1@ortmontreuil.fr</a></p>
+  </footer>
+
+  <script>
+    /* ── Theme ── */
+    const savedTheme = localStorage.getItem('portfolio-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    const themeBtn = document.getElementById('themeToggle');
+    themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('portfolio-theme', next);
+      themeBtn.textContent = next === 'dark' ? '☀️' : '🌙';
+    });
+
+    /* ── Nav ── */
+    const menuToggle    = document.getElementById('menuToggle');
+    const navLinks      = document.getElementById('navLinks');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+    const topnav        = document.getElementById('topnav');
+
+    function closeMobileMenu() {
+      navLinks.setAttribute('data-visible', 'false');
+      menuToggle.setAttribute('aria-expanded', 'false');
+      mobileOverlay.setAttribute('data-visible', 'false');
+    }
+    menuToggle.addEventListener('click', () => {
+      const open = navLinks.getAttribute('data-visible') === 'true';
+      navLinks.setAttribute('data-visible', String(!open));
+      menuToggle.setAttribute('aria-expanded', String(!open));
+      mobileOverlay.setAttribute('data-visible', String(!open));
+    });
+    mobileOverlay.addEventListener('click', closeMobileMenu);
+    navLinks.addEventListener('click', e => { if (e.target.classList.contains('nav-link')) closeMobileMenu(); });
+    window.addEventListener('scroll', () => { topnav.classList.toggle('scrolled', window.scrollY > 10); }, { passive: true });
+    window.addEventListener('resize', () => { if (window.innerWidth > 768) closeMobileMenu(); });
+
+    /* ── Scroll animations ── */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(el => {
+        if (el.isIntersecting) { el.target.classList.add('visible'); observer.unobserve(el.target); }
+      });
+    }, { threshold: 0.08, rootMargin: '-30px' });
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    /* ── Gallery ── */
+    const images = [
+      'Images/immosync/immo-01.jpeg',
+      'Images/immosync/immo-02.jpeg',
+      'Images/immosync/immo-03.jpeg',
+      'Images/immosync/immo-04.jpeg',
+      'Images/immosync/immo-05.jpeg',
+    ];
+
+    let currentIndex = 0;
+    const galleryImage = document.getElementById('gallery-image');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const counter = document.getElementById('counter');
+
+    function updateGallery(newIndex) {
+      galleryImage.classList.add('fade');
+      setTimeout(() => {
+        currentIndex = newIndex;
+        galleryImage.src = images[currentIndex];
+        counter.textContent = `${currentIndex + 1} / ${images.length}`;
+        prevBtn.disabled = currentIndex === 0;
+        nextBtn.disabled = currentIndex === images.length - 1;
+        galleryImage.classList.remove('fade');
+      }, 150);
+    }
+
+    prevBtn.addEventListener('click', () => { if (currentIndex > 0) updateGallery(currentIndex - 1); });
+    nextBtn.addEventListener('click', () => { if (currentIndex < images.length - 1) updateGallery(currentIndex + 1); });
+
+    /* ── Lightbox ── */
+    const lightbox = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lightbox-img');
+    const lbCounter = document.getElementById('lightbox-counter');
+    const lbPrev = document.getElementById('lightbox-prev');
+    const lbNext = document.getElementById('lightbox-next');
+    let lbIndex = 0;
+
+    function updateLightbox() {
+      lbImg.src = images[lbIndex];
+      lbCounter.textContent = `${lbIndex + 1} / ${images.length}`;
+      lbPrev.classList.toggle('disabled', lbIndex === 0);
+      lbNext.classList.toggle('disabled', lbIndex === images.length - 1);
+    }
+    function openLightbox(index) {
+      lbIndex = index;
+      updateLightbox();
+      lightbox.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      lightbox.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    galleryImage.addEventListener('click', () => openLightbox(currentIndex));
+    document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+    lbPrev.addEventListener('click', e => { e.stopPropagation(); if (lbIndex > 0) { lbIndex--; updateLightbox(); } });
+    lbNext.addEventListener('click', e => { e.stopPropagation(); if (lbIndex < images.length - 1) { lbIndex++; updateLightbox(); } });
+
+    document.addEventListener('keydown', e => {
+      if (lightbox.classList.contains('active')) {
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft' && lbIndex > 0) { lbIndex--; updateLightbox(); }
+        if (e.key === 'ArrowRight' && lbIndex < images.length - 1) { lbIndex++; updateLightbox(); }
+        return;
+      }
+      if (e.key === 'ArrowLeft' && currentIndex > 0) updateGallery(currentIndex - 1);
+      if (e.key === 'ArrowRight' && currentIndex < images.length - 1) updateGallery(currentIndex + 1);
+    });
+
+    updateGallery(0);
+  </script>
+</body>
+</html>

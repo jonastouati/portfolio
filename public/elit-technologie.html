@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stage Netvincennes — Jonas Touati</title>
+  <style>
+    /* ─── VARIABLES ─────────────────────────────────────────── */
+    :root {
+      --bg: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --accent: #2563eb;
+      --section-accent: #0d70a7;
+      --accent-hover: #1d4ed8;
+      --card-bg: #f8fafc;
+      --border: rgba(16, 24, 40, 0.07);
+      --shadow: 0 10px 22px rgba(16, 24, 40, 0.06);
+    }
+
+    [data-theme='dark'] {
+      --bg: #0f1724;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #60a5fa;
+      --section-accent: #60a5fa;
+      --accent-hover: #3b82f6;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.08);
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.7;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 5rem 2rem 3rem;
+    }
+
+    /* ─── NAV ───────────────────────────────────────────────── */
+    .topnav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 0.75rem 0;
+      backdrop-filter: blur(10px) saturate(180%);
+      background: rgba(15, 23, 36, 0.9);
+      z-index: 1000;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .topnav.scrolled {
+      padding: 0.5rem 0;
+      background: rgba(15, 23, 36, 0.98);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    .nav-container {
+      max-width: 1200px; margin: 0 auto; padding: 0 2rem;
+      display: flex; align-items: center;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 0.4rem;
+      text-decoration: none; font-weight: 800; color: #f8fafc;
+      font-size: 1.05rem; flex-shrink: 0; transition: opacity 0.2s ease;
+    }
+    .nav-brand:hover { opacity: 0.8; }
+    .nav-brand-icon { font-family: ui-monospace, monospace; color: #60a5fa; }
+
+    .nav-links {
+      display: flex; gap: 0.25rem; align-items: center;
+      margin-left: auto; margin-right: auto;
+    }
+    .nav-link {
+      color: #94a3b8; text-decoration: none;
+      padding: 0.5rem 1rem; border-radius: 8px;
+      font-size: 0.95rem; font-weight: 500;
+      transition: all 0.2s ease; position: relative; white-space: nowrap;
+    }
+    .nav-link::after {
+      content: ''; position: absolute; bottom: 2px; left: 50%;
+      transform: translateX(-50%); width: 0; height: 2px;
+      background: #60a5fa; transition: width 0.3s ease;
+    }
+    .nav-link:hover, .nav-link.active { color: #f8fafc; background: rgba(255,255,255,0.06); }
+    .nav-link:hover::after, .nav-link.active::after { width: 70%; }
+
+    .nav-actions { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
+
+    .theme-toggle {
+      background: transparent; border: none; color: #94a3b8;
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1.05rem; transition: all 0.2s ease;
+    }
+    .theme-toggle:hover { background: rgba(255,255,255,0.08); color: #f8fafc; transform: rotate(20deg); }
+
+    .menu-toggle {
+      display: none; background: transparent; border: none; color: #f8fafc;
+      width: 40px; height: 40px; border-radius: 8px;
+      align-items: center; justify-content: center; cursor: pointer; z-index: 1001;
+    }
+    .menu-toggle .hamburger {
+      position: relative; width: 20px; height: 2px;
+      background: currentColor; transition: all 0.3s ease;
+    }
+    .menu-toggle .hamburger::before, .menu-toggle .hamburger::after {
+      content: ''; position: absolute; width: 100%; height: 100%;
+      background: currentColor; transition: all 0.3s ease;
+    }
+    .menu-toggle .hamburger::before { transform: translateY(-6px); }
+    .menu-toggle .hamburger::after  { transform: translateY(6px); }
+    .menu-toggle[aria-expanded='true'] .hamburger { background: transparent; }
+    .menu-toggle[aria-expanded='true'] .hamburger::before { transform: rotate(45deg); }
+    .menu-toggle[aria-expanded='true'] .hamburger::after  { transform: rotate(-45deg); }
+
+    .mobile-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 999;
+    }
+    .mobile-overlay[data-visible='true'] { display: block; }
+
+    @media (max-width: 768px) {
+      .menu-toggle { display: flex; }
+      .nav-links {
+        position: fixed; top: 0; right: -100%; bottom: 0;
+        width: 80%; max-width: 300px; background: #0f1724;
+        flex-direction: column; padding: 5rem 1.5rem 2rem;
+        box-shadow: -5px 0 30px rgba(0,0,0,0.3);
+        transition: transform 0.3s ease-in-out; z-index: 1000; margin: 0;
+      }
+      .nav-links[data-visible='true'] { transform: translateX(-100%); }
+      .nav-link { width: 100%; padding: 0.75rem 1rem; margin: 0.2rem 0; }
+      .nav-link::after { display: none; }
+    }
+
+    /* ─── SCROLL ANIMATION ──────────────────────────────────── */
+    .fade-up {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1), transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+    .fade-up.delay-1 { transition-delay: 0.1s; }
+    .fade-up.delay-2 { transition-delay: 0.2s; }
+
+    /* ─── LAYOUT ────────────────────────────────────────────── */
+    .section { max-width: 1200px; margin: 0 auto 2.5rem; padding: 0 1rem; }
+
+    .section-title {
+      text-align: center; font-size: clamp(2.2rem, 6vw, 4rem);
+      letter-spacing: 0.5px; margin: 0 0 1.5rem;
+      color: var(--section-accent); font-weight: 900;
+    }
+    .section-subtitle {
+      text-align: center; font-size: clamp(1.6rem, 4vw, 2.4rem);
+      letter-spacing: 0.5px; margin: 2.5rem 0 1.5rem;
+      color: var(--section-accent); font-weight: 900;
+    }
+
+    .section-content {
+      text-align: center; max-width: 980px; margin: 0 auto 2rem;
+      font-size: 1.15rem; color: var(--muted); line-height: 1.7;
+      background: var(--card-bg); padding: 2rem; border-radius: 12px;
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+      transition: background 0.3s ease;
+    }
+    .section-content p { color: var(--muted); margin-bottom: 0.75rem; }
+    .section-content p:last-child { margin-bottom: 0; }
+    .section-content strong { color: var(--text); }
+
+    /* ─── TABLE ─────────────────────────────────────────────── */
+    .info-table {
+      max-width: 980px; margin: 0 auto 2rem;
+      background: var(--card-bg); border-radius: 12px;
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+      overflow: hidden; transition: background 0.3s ease;
+    }
+    .info-table table { width: 100%; border-collapse: collapse; }
+    .info-table th, .info-table td {
+      padding: 1rem 1.5rem; text-align: left; font-size: 1.1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .info-table tr:last-child th, .info-table tr:last-child td { border-bottom: none; }
+    .info-table th { width: 35%; font-weight: 700; color: var(--text); background: rgba(0,0,0,0.03); }
+    [data-theme='dark'] .info-table th { background: rgba(255,255,255,0.03); }
+    .info-table td { color: var(--muted); }
+    .info-table a { color: var(--accent); }
+
+    /* ─── CONTENT CARD ──────────────────────────────────────── */
+    .content-card {
+      max-width: 980px; margin: 0 auto 2rem;
+      background: var(--card-bg); padding: 2rem 2.5rem;
+      border-radius: 12px; box-shadow: var(--shadow);
+      border: 1px solid var(--border); text-align: left;
+      font-size: 1.1rem; color: var(--muted); line-height: 1.8;
+      transition: background 0.3s ease;
+    }
+    .content-card p { margin-bottom: 1rem; color: var(--muted); }
+    .content-card p:last-child { margin-bottom: 0; }
+    .content-card ul { list-style: none; padding: 0; margin: 0; }
+    .content-card li { margin-bottom: 1rem; padding-left: 1.6rem; position: relative; }
+    .content-card li:last-child { margin-bottom: 0; }
+    .content-card li::before {
+      content: '▸'; position: absolute; left: 0;
+      color: var(--section-accent); font-weight: bold;
+    }
+    .content-card strong { color: var(--text); font-weight: 600; }
+
+    /* ─── SWOT ──────────────────────────────────────────────── */
+    .swot-grid {
+      max-width: 980px; margin: 0 auto 2rem;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+    }
+    .swot-card {
+      background: var(--card-bg); padding: 2rem; border-radius: 12px;
+      box-shadow: var(--shadow); border: 1px solid var(--border); text-align: left;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+    .swot-card:hover { transform: translateY(-4px); }
+    .swot-card h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; }
+    .swot-card ul { list-style: none; padding: 0; margin: 0; }
+    .swot-card li {
+      margin-bottom: 0.8rem; padding-left: 1.4rem; position: relative;
+      font-size: 1.05rem; color: var(--muted); line-height: 1.6;
+    }
+    .swot-card li:last-child { margin-bottom: 0; }
+    .swot-card li::before { content: '•'; position: absolute; left: 0; font-weight: bold; }
+
+    .swot-forces      h3 { color: #16a34a; } .swot-forces      li::before { color: #16a34a; }
+    .swot-faiblesses  h3 { color: #dc2626; } .swot-faiblesses  li::before { color: #dc2626; }
+    .swot-opportunites h3 { color: #2563eb; } .swot-opportunites li::before { color: #2563eb; }
+    .swot-menaces     h3 { color: #ea580c; } .swot-menaces     li::before { color: #ea580c; }
+    [data-theme='dark'] .swot-opportunites h3 { color: #60a5fa; }
+    [data-theme='dark'] .swot-opportunites li::before { color: #60a5fa; }
+
+    /* ─── SEPARATOR + FOOTER ────────────────────────────────── */
+    .section-separator { max-width: 200px; margin: 3rem auto; border: none; border-top: 2px solid var(--border); }
+
+    .site-footer { margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border); text-align: center; }
+    .site-footer p { margin: 0.6rem 0; font-size: 1.1rem; color: var(--text); }
+    .site-footer a { color: var(--section-accent); text-decoration: underline dotted; font-weight: 700; }
+    .site-footer a:hover { color: var(--accent); }
+
+    /* ─── GALLERY ───────────────────────────────────────────── */
+    .gallery-container { max-width: 1100px; margin: 2rem auto; }
+    .gallery-filters { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; padding: 0 1rem; }
+    .filter-btn { background: var(--card-bg); color: var(--text); border: 2px solid var(--border); padding: 0.75rem 1.8rem; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+    .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; padding: 0 1rem; }
+    .gallery-item { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; cursor: pointer; transition: all 0.3s ease; }
+    .gallery-item.hidden { display: none; }
+    .gallery-item:hover { transform: translateY(-6px); box-shadow: 0 14px 30px rgba(0,0,0,0.15); }
+    .gallery-item img { width: 100%; height: 220px; object-fit: cover; display: block; }
+    .gallery-item-caption { padding: 0.85rem 1.1rem; font-size: 0.9rem; color: var(--muted); text-align: center; font-weight: 500; border-top: 1px solid var(--border); }
+    /* ─── LIGHTBOX ──────────────────────────────────────────── */
+    .lightbox-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; align-items: center; justify-content: center; cursor: pointer; }
+    .lightbox-overlay.active { display: flex; }
+    .lightbox-content { position: relative; max-width: 90%; max-height: 90%; display: flex; align-items: center; justify-content: center; }
+    .lightbox-overlay img { max-width: 100%; max-height: 90vh; object-fit: contain; box-shadow: 0 20px 60px rgba(0,0,0,0.5); border-radius: 8px; cursor: default; }
+    .lightbox-close { position: absolute; top: 2rem; right: 3rem; color: white; font-size: 3rem; font-weight: 300; cursor: pointer; transition: transform 0.2s ease; z-index: 10001; }
+    .lightbox-close:hover { transform: scale(1.2); }
+    .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); color: white; border: 2px solid rgba(255,255,255,0.3); width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.8rem; font-weight: 700; transition: all 0.3s ease; z-index: 10001; user-select: none; }
+    .lightbox-nav:hover { background: rgba(255,255,255,0.25); transform: translateY(-50%) scale(1.1); }
+    .lightbox-nav.disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+    .lightbox-prev { left: 2rem; } .lightbox-next { right: 2rem; }
+    .lightbox-counter { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); color: white; padding: 0.7rem 1.4rem; border-radius: 25px; font-size: 1rem; font-weight: 600; z-index: 10001; }
+
+    @media (max-width: 768px) {
+      .container { padding: 4rem 1.5rem 2rem; }
+      .swot-grid { grid-template-columns: 1fr; }
+      .content-card { padding: 1.5rem; }
+      .gallery-grid { grid-template-columns: 1fr; }
+      .gallery-filters { gap: 0.5rem; }
+      .filter-btn { padding: 0.6rem 1.3rem; font-size: 0.9rem; }
+      .gallery-item img { height: 180px; }
+      .lightbox-close { top: 1rem; right: 1.5rem; font-size: 2.5rem; }
+      .lightbox-nav { width: 46px; height: 46px; font-size: 1.4rem; }
+      .lightbox-prev { left: 0.5rem; } .lightbox-next { right: 0.5rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mobile-overlay" id="mobileOverlay" data-visible="false"></div>
+
+  <nav class="topnav" id="topnav">
+    <div class="nav-container">
+      <a href="/" class="nav-brand" aria-label="Accueil">
+        <span class="nav-brand-icon">&lt;/&gt;</span>
+        <span>JT</span>
+      </a>
+      <div class="nav-links" id="navLinks" data-visible="false">
+        <a href="/" class="nav-link" onclick="localStorage.removeItem('portfolio-theme')">Accueil</a>
+        <a href="/allperf.html"          class="nav-link">Stage Atol</a>
+        <a href="/elit-technologie.html" class="nav-link active">Stage Netvincennes</a>
+        <a href="/immo-sync.html"        class="nav-link">ImmoSync</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" aria-label="Changer le thème">🌙</button>
+        <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-label="Menu">
+          <span class="hamburger"></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <section class="section">
+
+      <h1 class="section-title fade-up">PRÉSENTATION DE L'ENTREPRISE</h1>
+      <div class="section-content fade-up delay-1">
+        <p>
+          <strong>Netvincennes</strong> est une entreprise spécialisée dans le développement de solutions
+          numériques et de sites web pour les entreprises.
+        </p>
+        <p>
+          L'entreprise propose également des services de <strong>développement front-end et back-end,
+          intégration d'API, e-commerce</strong> et accompagnement technique pour ses clients.
+        </p>
+      </div>
+
+      <hr class="section-separator" />
+      <h2 class="section-subtitle fade-up">IDENTIFICATION</h2>
+      <div class="info-table fade-up delay-1">
+        <table>
+          <tbody>
+            <tr><th>Dénomination</th><td>Netvincennes</td></tr>
+            <tr><th>Forme juridique</th><td>SARL</td></tr>
+            <tr><th>Date de création</th><td>2008</td></tr>
+            <tr><th>Adresse</th><td>Vincennes, France</td></tr>
+            <tr><th>Site web</th><td><a href="https://netvincennes.fr" target="_blank">netvincennes.fr</a></td></tr>
+            <tr><th>Spécialité</th><td>Développement web, intégration d'API, e-commerce</td></tr>
+            <tr><th>Services</th><td>Sites web vitrine et e-commerce, intégration d'API, gestion de projets numériques</td></tr>
+            <tr><th>RSE / Environnement</th><td>Optimisation énergétique, bonnes pratiques de développement durable, sensibilisation aux impacts numériques</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <hr class="section-separator" />
+      <h2 class="section-subtitle fade-up">HISTORIQUE</h2>
+      <div class="content-card fade-up delay-1">
+        <p>
+          Fondée en <strong>2008</strong>, Netvincennes développe depuis plus de 15 ans des solutions numériques
+          adaptées aux besoins des entreprises et projets personnels.
+        </p>
+        <p>
+          L'entreprise a réalisé plusieurs projets dont <strong>un générateur d'images multi-API avec
+          OpenRouteService</strong> et <strong>le site e-commerce naturenfort.fr</strong>.
+        </p>
+      </div>
+
+      <hr class="section-separator" />
+      <h2 class="section-subtitle fade-up">RGPD — PROTECTION DES DONNÉES</h2>
+      <div class="content-card fade-up delay-1">
+        <p>Netvincennes respecte les règles du <strong>RGPD (Règlement Général sur la Protection des Données)</strong>
+afin de garantir la protection des informations personnelles des utilisateurs.</p>
+          <ul>
+<li>Collecte limitée des données nécessaires au fonctionnement des sites web.</li>
+<li>Sécurisation des bases de données et des accès administrateurs.</li>
+<li>Possibilité pour les utilisateurs de demander la modification ou la suppression de leurs données.</li>
+<li>Mise en place de politiques de confidentialité sur les sites développés pour les clients.</li>
+</ul>
+<p>
+Ces mesures permettent de garantir la confidentialité et la sécurité des données
+des utilisateurs et des clients.
+</p>
+</div>
+
+      <hr class="section-separator" />
+      <h2 class="section-subtitle fade-up">ORIENTATIONS STRATÉGIQUES</h2>
+      <div class="content-card fade-up delay-1">
+        <ul>
+<li>Développer des <strong>sites web modernes et performants</strong> pour les entreprises.</li>
+<li>Proposer des solutions <strong>e-commerce adaptées aux PME</strong>.</li>
+<li>Intégrer des <strong>API et technologies modernes</strong> pour automatiser certaines tâches.</li>
+<li>Accompagner les entreprises dans leur <strong>transformation numérique</strong>.</li>
+<li>Mettre en place des solutions optimisées et durables pour réduire la consommation de ressources.</li>
+</ul>
+      </div>
+
+      <hr class="section-separator" />
+      <h2 class="section-subtitle fade-up">RSE — RESPONSABILITÉ SOCIÉTALE</h2>
+      <div class="content-card fade-up delay-1">
+        <p>
+          Netvincennes s'engage dans une démarche <strong>RSE</strong> en utilisant des technologies économes
+          en énergie, en favorisant les solutions open-source et en sensibilisant ses employés aux pratiques
+          durables dans le numérique.
+        </p>
+      </div>
+
+      <hr class="section-separator" />
+      <h2 class="section-subtitle fade-up">ANALYSE SWOT</h2>
+      <div class="swot-grid fade-up delay-1">
+        <div class="swot-card swot-forces">
+          <h3>🟢 Forces</h3>
+          <ul>
+            <li>Expertise sur des technologies variées (HTML, CSS, JS, PHP, SQL)</li>
+            <li>Projets diversifiés et innovants (API, e-commerce, générateurs)</li>
+            <li>Autonomie et adaptabilité dans les projets</li>
+            <li>Respect des standards et bonnes pratiques numériques</li>
+          </ul>
+        </div>
+        <div class="swot-card swot-faiblesses">
+          <h3>🔴 Faiblesses</h3>
+          <ul>
+            <li>Petite structure avec ressources limitées</li>
+            <li>Visibilité limitée sur le marché national</li>
+            <li>Dépendance à certains clients et projets ponctuels</li>
+          </ul>
+        </div>
+        <div class="swot-card swot-opportunites">
+          <h3>🔵 Opportunités</h3>
+          <ul>
+            <li>Expansion vers l'e-commerce et services numériques pour PME</li>
+            <li>Développement de solutions durables et RSE</li>
+            <li>Intégration de nouvelles API et technologies innovantes</li>
+          </ul>
+        </div>
+        <div class="swot-card swot-menaces">
+          <h3>🟠 Menaces</h3>
+          <ul>
+            <li>Concurrence des agences et freelances</li>
+            <li>Évolution rapide des technologies et frameworks</li>
+            <li>Évolution de la réglementation numérique</li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="section-separator" />
+      <h2 class="section-subtitle fade-up">RSE DES ENTREPRISES PARTENAIRES</h2>
+      <div class="content-card fade-up delay-1">
+        <h3 style="color:#16a34a; margin-bottom: 1rem;">📌 Netvincennes</h3>
+        <ul>
+          <li>Promotion du recyclage des équipements numériques obsolètes</li>
+          <li>Utilisation d'API et services durables pour limiter l'empreinte carbone</li>
+          <li>Sensibilisation des développeurs aux bonnes pratiques de code écologique</li>
+        </ul>
+      </div>
+
+      <hr class="section-separator" />
+      <h2 class="section-subtitle fade-up">PROJETS RÉALISÉS EN STAGE</h2>
+      <div class="content-card fade-up delay-1">
+        <p>Durant mon stage chez Netvincennes, j'ai réalisé plusieurs missions :</p>
+        <ul>
+          <li>Développement d'un générateur d'images multi-API avec contraintes personnalisées sur OpenRouteService</li>
+          <li>Création du site e-commerce <strong>naturenfort.fr</strong> avec gestion des produits, panier et paiement</li>
+        </ul>
+      </div>
+
+      <h3 class="section-subtitle fade-up" style="font-size: clamp(1.3rem, 3vw, 1.8rem);">🎯 Objectifs</h3>
+      <div class="content-card fade-up delay-1">
+        <ul>
+         <ul>
+<li>Découvrir le fonctionnement d'une entreprise spécialisée dans le développement web.</li>
+<li>Mettre en pratique mes connaissances en <strong>HTML, CSS, JavaScript et développement web</strong>.</li>
+<li>Participer à la création de projets réels destinés à des utilisateurs.</li>
+<li>Comprendre les différentes étapes d'un projet numérique (analyse, développement, tests).</li>
+</ul>
+        </ul>
+      </div>
+
+      <h3 class="section-subtitle fade-up" style="font-size: clamp(1.3rem, 3vw, 1.8rem);">🛠️ Moyens utilisés</h3>
+      <div class="content-card fade-up delay-1">
+        <ul>
+          <ul>
+<li>Langages de développement : <strong>HTML, CSS, JavaScript, PHP</strong>.</li>
+<li>Base de données : <strong>SQL / MySQL</strong>.</li>
+<li>Utilisation d'API externes comme <strong>OpenRouteService</strong>.</li>
+<li>Éditeurs de code : <strong>Visual Studio Code</strong>.</li>
+<li>Navigateurs et outils de développement pour tester les interfaces.</li>
+</ul>
+        </ul>
+      </div>
+
+      <h3 class="section-subtitle fade-up" style="font-size: clamp(1.3rem, 3vw, 1.8rem);">⚡ Difficultés rencontrées</h3>
+      <div class="content-card fade-up delay-1">
+        <ul>
+          <ul>
+<li>Comprendre le fonctionnement et l'intégration des <strong>API externes</strong>.</li>
+<li>Gérer certaines erreurs liées aux requêtes et aux réponses des services API.</li>
+<li>Adapter le design des interfaces pour qu'elles soient <strong>responsives</strong> sur mobile.</li>
+<li>Organiser correctement le code pour faciliter la maintenance du projet.</li>
+</ul>
+        </ul>
+      </div>
+
+      <h3 class="section-subtitle fade-up" style="font-size: clamp(1.3rem, 3vw, 1.8rem);">✅ Résultats obtenus</h3>
+      <div class="content-card fade-up delay-1">
+        <ul>
+          <ul>
+<li>Création d'un <strong>générateur d'images utilisant plusieurs API</strong>.</li>
+<li>Participation au développement d'un <strong>site e-commerce</strong>.</li>
+<li>Amélioration de mes compétences en <strong>développement web et intégration d'API</strong>.</li>
+<li>Compréhension concrète du travail en entreprise dans le domaine du numérique.</li>
+</ul>
+        </ul>
+      </div>
+
+      <h4 class="section-subtitle fade-up" style="font-size: clamp(1.3rem, 3vw, 1.8rem); margin-top: 2rem;">📸 Aperçu visuel du projet</h4>
+      <p class="fade-up" style="text-align: center; color: var(--muted); margin-bottom: 2rem; font-size: 1.05rem;">
+        Captures d'écran des projets réalisés pendant le stage.
+      </p>
+
+      <div class="gallery-container fade-up delay-1">
+        <div class="gallery-filters">
+          <button class="filter-btn active" data-category="all">🎯 Tous</button>
+          <button class="filter-btn" data-category="generateur">🖼️ Générateur d'images</button>
+          <button class="filter-btn" data-category="ecommerce">🛒 E-commerce</button>
+        </div>
+        <div class="gallery-grid" id="galleryGrid">
+          <div class="gallery-item" data-category="generateur" data-src="Images/netvincennes/net-01.jpeg">
+            <img src="Images/netvincennes/net-01.jpeg" alt="Générateur d'images — capture 1" loading="lazy" />
+            <div class="gallery-item-caption">Générateur d'images — capture 1</div>
+          </div>
+          <div class="gallery-item" data-category="generateur" data-src="Images/netvincennes/net-02.jpeg">
+            <img src="Images/netvincennes/net-02.jpeg" alt="Générateur d'images — capture 2" loading="lazy" />
+            <div class="gallery-item-caption">Générateur d'images — capture 2</div>
+          </div>
+          <div class="gallery-item" data-category="generateur" data-src="Images/netvincennes/net-03.jpeg">
+            <img src="Images/netvincennes/net-03.jpeg" alt="Générateur d'images — capture 3" loading="lazy" />
+            <div class="gallery-item-caption">Générateur d'images — capture 3</div>
+          </div>
+          <div class="gallery-item" data-category="generateur" data-src="Images/netvincennes/net-04.jpeg">
+            <img src="Images/netvincennes/net-04.jpeg" alt="Générateur d'images — capture 4" loading="lazy" />
+            <div class="gallery-item-caption">Générateur d'images — capture 4</div>
+          </div>
+          <div class="gallery-item" data-category="generateur" data-src="Images/netvincennes/net-05.jpeg">
+            <img src="Images/netvincennes/net-05.jpeg" alt="Générateur d'images — capture 5" loading="lazy" />
+            <div class="gallery-item-caption">Générateur d'images — capture 5</div>
+          </div>
+          <div class="gallery-item" data-category="generateur" data-src="Images/netvincennes/net-06.jpeg">
+            <img src="Images/netvincennes/net-06.jpeg" alt="Générateur d'images — capture 6" loading="lazy" />
+            <div class="gallery-item-caption">Générateur d'images — capture 6</div>
+          </div>
+          <div class="gallery-item" data-category="generateur" data-src="Images/netvincennes/net-07.jpeg">
+            <img src="Images/netvincennes/net-07.jpeg" alt="Générateur d'images — capture 7" loading="lazy" />
+            <div class="gallery-item-caption">Générateur d'images — capture 7</div>
+          </div>
+          <div class="gallery-item" data-category="ecommerce" data-src="Images/netvincennes/net-08.jpeg">
+            <img src="Images/netvincennes/net-08.jpeg" alt="E-commerce — capture 1" loading="lazy" />
+            <div class="gallery-item-caption">E-commerce — capture 1</div>
+          </div>
+          <div class="gallery-item" data-category="ecommerce" data-src="Images/netvincennes/net-09.jpeg">
+            <img src="Images/netvincennes/net-09.jpeg" alt="E-commerce — capture 2" loading="lazy" />
+            <div class="gallery-item-caption">E-commerce — capture 2</div>
+          </div>
+          <div class="gallery-item" data-category="ecommerce" data-src="Images/netvincennes/net-10.jpeg">
+            <img src="Images/netvincennes/net-10.jpeg" alt="E-commerce — capture 3" loading="lazy" />
+            <div class="gallery-item-caption">E-commerce — capture 3</div>
+          </div>
+          <div class="gallery-item" data-category="ecommerce" data-src="Images/netvincennes/net-11.jpeg">
+            <img src="Images/netvincennes/net-11.jpeg" alt="E-commerce — capture 4" loading="lazy" />
+            <div class="gallery-item-caption">E-commerce — capture 4</div>
+          </div>
+          <div class="gallery-item" data-category="ecommerce" data-src="Images/netvincennes/net-12.jpeg">
+            <img src="Images/netvincennes/net-12.jpeg" alt="E-commerce — capture 5" loading="lazy" />
+            <div class="gallery-item-caption">E-commerce — capture 5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lightbox-overlay" id="lightbox">
+        <span class="lightbox-close" id="lightbox-close">&times;</span>
+        <button class="lightbox-nav lightbox-prev" id="lightbox-prev">&#8249;</button>
+        <div class="lightbox-content">
+          <img id="lightbox-img" src="" alt="" />
+        </div>
+        <button class="lightbox-nav lightbox-next" id="lightbox-next">&#8250;</button>
+        <div class="lightbox-counter" id="lightbox-counter"></div>
+      </div>
+
+      <hr class="section-separator" />
+      <h2 class="section-subtitle fade-up">CONCLUSION</h2>
+      <div class="content-card fade-up delay-1">
+        <p>Ce stage a été déterminant pour mettre en pratique mes compétences en développement web, API,
+        e-commerce et gestion de projet. J'ai appris à gérer un projet complet, du front-end au back-end,
+        tout en respectant les contraintes techniques et les bonnes pratiques professionnelles.</p>
+      </div>
+
+    </section>
+  </div>
+
+  <footer class="site-footer">
+    <p>Me contacter : <a href="https://mail.google.com/mail/?view=cm&fs=1&to=jonas.touati1@ortmontreuil.fr" target="_blank" rel="noopener noreferrer">jonas.touati1@ortmontreuil.fr</a></p>
+  </footer>
+
+  <script>
+    /* ── Theme ── */
+    const savedTheme = localStorage.getItem('portfolio-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    const themeBtn = document.getElementById('themeToggle');
+    themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('portfolio-theme', next);
+      themeBtn.textContent = next === 'dark' ? '☀️' : '🌙';
+    });
+
+    /* ── Nav ── */
+    const menuToggle    = document.getElementById('menuToggle');
+    const navLinks      = document.getElementById('navLinks');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+    const topnav        = document.getElementById('topnav');
+
+    function closeMobileMenu() {
+      navLinks.setAttribute('data-visible', 'false');
+      menuToggle.setAttribute('aria-expanded', 'false');
+      mobileOverlay.setAttribute('data-visible', 'false');
+    }
+    menuToggle.addEventListener('click', () => {
+      const open = navLinks.getAttribute('data-visible') === 'true';
+      navLinks.setAttribute('data-visible', String(!open));
+      menuToggle.setAttribute('aria-expanded', String(!open));
+      mobileOverlay.setAttribute('data-visible', String(!open));
+    });
+    mobileOverlay.addEventListener('click', closeMobileMenu);
+    navLinks.addEventListener('click', e => { if (e.target.classList.contains('nav-link')) closeMobileMenu(); });
+    window.addEventListener('scroll', () => { topnav.classList.toggle('scrolled', window.scrollY > 10); }, { passive: true });
+    window.addEventListener('resize', () => { if (window.innerWidth > 768) closeMobileMenu(); });
+
+    /* ── Gallery & Lightbox ── */
+    const galleryData = [
+      { src: 'Images/netvincennes/net-01.jpeg', caption: 'Générateur d\'images — capture 1', category: 'generateur' },
+      { src: 'Images/netvincennes/net-02.jpeg', caption: 'Générateur d\'images — capture 2', category: 'generateur' },
+      { src: 'Images/netvincennes/net-03.jpeg', caption: 'Générateur d\'images — capture 3', category: 'generateur' },
+      { src: 'Images/netvincennes/net-04.jpeg', caption: 'Générateur d\'images — capture 4', category: 'generateur' },
+      { src: 'Images/netvincennes/net-05.jpeg', caption: 'Générateur d\'images — capture 5', category: 'generateur' },
+      { src: 'Images/netvincennes/net-06.jpeg', caption: 'Générateur d\'images — capture 6', category: 'generateur' },
+      { src: 'Images/netvincennes/net-07.jpeg', caption: 'Générateur d\'images — capture 7', category: 'generateur' },
+      { src: 'Images/netvincennes/net-08.jpeg', caption: 'E-commerce — capture 1', category: 'ecommerce' },
+      { src: 'Images/netvincennes/net-09.jpeg', caption: 'E-commerce — capture 2', category: 'ecommerce' },
+      { src: 'Images/netvincennes/net-10.jpeg', caption: 'E-commerce — capture 3', category: 'ecommerce' },
+      { src: 'Images/netvincennes/net-11.jpeg', caption: 'E-commerce — capture 4', category: 'ecommerce' },
+      { src: 'Images/netvincennes/net-12.jpeg', caption: 'E-commerce — capture 5', category: 'ecommerce' },
+    ];
+
+    let currentCategory = 'all';
+    let currentImageIndex = 0;
+    let visibleImages = [];
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCategory = btn.getAttribute('data-category');
+        document.querySelectorAll('.gallery-item').forEach(item => {
+          item.classList.toggle('hidden', currentCategory !== 'all' && item.getAttribute('data-category') !== currentCategory);
+        });
+      });
+    });
+
+    function getVisibleImages() {
+      return currentCategory === 'all' ? galleryData : galleryData.filter(img => img.category === currentCategory);
+    }
+    function openLightbox(src) {
+      visibleImages = getVisibleImages();
+      currentImageIndex = visibleImages.findIndex(img => img.src === src);
+      if (currentImageIndex === -1) currentImageIndex = 0;
+      updateLightbox();
+      document.getElementById('lightbox').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function updateLightbox() {
+      const cur = visibleImages[currentImageIndex];
+      document.getElementById('lightbox-img').src = cur.src;
+      document.getElementById('lightbox-img').alt = cur.caption;
+      document.getElementById('lightbox-counter').textContent = `${currentImageIndex + 1} / ${visibleImages.length}`;
+      document.getElementById('lightbox-prev').classList.toggle('disabled', currentImageIndex === 0);
+      document.getElementById('lightbox-next').classList.toggle('disabled', currentImageIndex === visibleImages.length - 1);
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    document.querySelectorAll('.gallery-item').forEach(item => {
+      item.addEventListener('click', () => openLightbox(item.getAttribute('data-src')));
+    });
+    const lbEl = document.getElementById('lightbox');
+    if (lbEl) {
+      document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+      lbEl.addEventListener('click', e => { if (e.target === lbEl) closeLightbox(); });
+      document.getElementById('lightbox-prev').addEventListener('click', e => { e.stopPropagation(); if (currentImageIndex > 0) { currentImageIndex--; updateLightbox(); } });
+      document.getElementById('lightbox-next').addEventListener('click', e => { e.stopPropagation(); if (currentImageIndex < visibleImages.length - 1) { currentImageIndex++; updateLightbox(); } });
+    }
+    document.addEventListener('keydown', e => {
+      if (!lbEl || !lbEl.classList.contains('active')) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft' && currentImageIndex > 0) { currentImageIndex--; updateLightbox(); }
+      if (e.key === 'ArrowRight' && currentImageIndex < visibleImages.length - 1) { currentImageIndex++; updateLightbox(); }
+    });
+
+    /* ── Scroll animations ── */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(el => {
+        if (el.isIntersecting) { el.target.classList.add('visible'); observer.unobserve(el.target); }
+      });
+    }, { threshold: 0.08, rootMargin: '-30px' });
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
