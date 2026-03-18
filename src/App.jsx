@@ -200,7 +200,7 @@ function App() {
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
             <h1>
-              Salut, je suis <span className="name">Jonas Touati</span>
+              Bonjour, je suis <span className="name">Jonas TOUATI</span>
             </h1>
             <section aria-label="Présentation courte">
               <div style={{ marginBottom: '0.75rem' }}>
@@ -458,4 +458,3 @@ function App() {
 }
 
 export default App
-
